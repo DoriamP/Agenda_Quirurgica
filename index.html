@@ -2,66 +2,101 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d47a1">
 <title>Agenda Quirúrgica — Dr. Doriam Perera</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
   --azul:#1565c0; --azul-osc:#0d47a1; --verde:#2e7d32; --rojo:#c62828;
-  --ambar:#ef6c00; --gris:#f4f6f8; --borde:#dde3ea; --texto:#263238;
+  --ambar:#ef6c00; --gris:#eef2f6; --borde:#dde3ea; --texto:#263238;
 }
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
 body{background:var(--gris);color:var(--texto)}
-header{background:linear-gradient(135deg,var(--azul-osc),var(--azul));color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-header h1{font-size:1.25rem;font-weight:600}
-header .sub{font-size:.85rem;opacity:.9}
-nav{display:flex;background:#fff;border-bottom:1px solid var(--borde);overflow-x:auto;position:sticky;top:0;z-index:50}
-nav button{flex:1;min-width:130px;padding:13px 8px;border:none;background:none;cursor:pointer;font-size:.9rem;color:#607d8b;border-bottom:3px solid transparent;white-space:nowrap}
-nav button.act{color:var(--azul);border-bottom-color:var(--azul);font-weight:600;background:#f0f6ff}
-main{max-width:980px;margin:0 auto;padding:18px 14px 60px}
-.card{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-h2{font-size:1.05rem;margin-bottom:12px;color:var(--azul-osc)}
+
+/* ───── encabezado ───── */
+header{background:linear-gradient(135deg,var(--azul-osc),var(--azul));color:#fff;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
+header h1{font-size:1.05rem;font-weight:600;line-height:1.2}
+header .sub{font-size:.78rem;opacity:.9}
+#btnRefrescar{margin-left:auto;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:8px 12px;font-size:.82rem;cursor:pointer}
+
+/* ───── menú superior ───── */
+#menu{position:sticky;top:0;z-index:60;background:#fff;border-bottom:1px solid var(--borde);display:flex;gap:8px;padding:10px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#menu::-webkit-scrollbar{display:none}
+#menu button{flex:0 0 auto;border:1px solid var(--borde);background:#f7fafd;color:#455a64;border-radius:20px;padding:9px 15px;font-size:.84rem;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+#menu button .cnt{background:var(--azul);color:#fff;border-radius:10px;font-size:.7rem;padding:1px 7px;min-width:20px;text-align:center}
+#menu button:active{transform:scale(.96)}
+#menu button.nuevo-btn{background:var(--verde);border-color:var(--verde);color:#fff}
+
+main{max-width:980px;margin:0 auto;padding:14px 10px calc(90px + env(safe-area-inset-bottom))}
+
+/* ───── secciones desplegables ───── */
+.sec{background:#fff;border:1px solid var(--borde);border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sec-head{width:100%;display:flex;align-items:center;gap:10px;padding:15px 14px;border:none;background:#fff;cursor:pointer;text-align:left}
+.sec-head .ico{font-size:1.2rem}
+.sec-head .tit{font-size:.95rem;font-weight:700;color:var(--azul-osc);flex:1}
+.sec-head .cnt{background:#e3f2fd;color:var(--azul-osc);border-radius:11px;font-size:.74rem;font-weight:700;padding:3px 9px}
+.sec-head .chev{color:#90a4ae;transition:.25s;font-size:.85rem}
+.sec.abierta>.sec-head{border-bottom:1px solid var(--borde);background:#f5f9ff}
+.sec.abierta>.sec-head .chev{transform:rotate(180deg)}
+.sec-body{display:none;padding:14px}
+.sec.abierta>.sec-body{display:block}
+
 label{display:block;font-size:.8rem;font-weight:600;margin:10px 0 4px;color:#455a64}
-input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--borde);border-radius:6px;font-size:.92rem;background:#fff}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--borde);border-radius:8px;font-size:16px;background:#fff;color:var(--texto)}
 textarea{min-height:70px;resize:vertical}
-.fila{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.fila{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 @media(max-width:560px){.fila{grid-template-columns:1fr}}
-.btn{display:inline-block;border:none;border-radius:6px;padding:10px 18px;font-size:.9rem;cursor:pointer;color:#fff;background:var(--azul);margin-top:12px}
-.btn:hover{filter:brightness(1.08)}
+
+.btn{display:inline-block;border:none;border-radius:8px;padding:12px 18px;font-size:.92rem;font-weight:600;cursor:pointer;color:#fff;background:var(--azul);margin-top:12px}
+.btn:active{transform:scale(.97)}
 .btn.verde{background:var(--verde)} .btn.rojo{background:var(--rojo)} .btn.ambar{background:var(--ambar)}
-.btn.mini{padding:6px 12px;font-size:.8rem;margin:4px 4px 0 0}
+.btn.mini{padding:9px 13px;font-size:.8rem;margin:6px 6px 0 0}
+.btn.bloque{width:100%}
 .btn:disabled{opacity:.5;cursor:wait}
-.pac{border:1px solid var(--borde);border-radius:8px;margin-bottom:10px;background:#fff;overflow:hidden}
-.pac-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;flex-wrap:wrap}
-.pac-head:hover{background:#f7fafd}
-.pac-nombre{font-weight:600;font-size:.97rem}
-.tag{font-size:.74rem;padding:3px 9px;border-radius:12px;background:#e3f2fd;color:var(--azul-osc);white-space:nowrap}
-.tag.dias{background:#fff3e0;color:var(--ambar);font-weight:600}
+@media(max-width:560px){.btn.mini{display:block;width:100%;margin:8px 0 0}}
+
+/* ───── tarjetas de paciente ───── */
+.pac{border:1px solid var(--borde);border-radius:10px;margin-bottom:10px;background:#fff;overflow:hidden}
+.pac-head{display:flex;align-items:center;gap:7px;padding:13px 12px;cursor:pointer;flex-wrap:wrap}
+.pac-head:active{background:#f7fafd}
+.pac-nombre{font-weight:700;font-size:.95rem;flex-basis:calc(100% - 34px)}
+.tag{font-size:.73rem;padding:4px 10px;border-radius:12px;background:#e3f2fd;color:var(--azul-osc);white-space:nowrap}
+.tag.dias{background:#fff3e0;color:var(--ambar);font-weight:700}
 .tag.op{background:#e8f5e9;color:var(--verde)} .tag.canc{background:#ffebee;color:var(--rojo)}
-.flecha{margin-left:auto;color:#90a4ae;transition:.2s}
+.flecha{position:absolute;right:12px;top:13px;color:#90a4ae;transition:.2s}
+.pac-head{position:relative;padding-right:34px}
 .pac.abierto .flecha{transform:rotate(180deg)}
-.pac-det{display:none;padding:0 14px 14px;border-top:1px dashed var(--borde)}
+.pac-det{display:none;padding:0 12px 14px;border-top:1px dashed var(--borde)}
 .pac.abierto .pac-det{display:block}
-.det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:10px}
-.det-grid div{font-size:.85rem;background:var(--gris);padding:7px 10px;border-radius:6px}
-.det-grid b{color:#546e7a;font-size:.75rem;display:block}
+.det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+.det-grid div{font-size:.85rem;background:var(--gris);padding:8px 10px;border-radius:8px;word-break:break-word}
+.det-grid b{color:#546e7a;font-size:.72rem;display:block}
 .imgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.imgs a img{width:110px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--borde)}
-.evo{background:#f1f8e9;border-left:3px solid var(--verde);padding:8px 12px;border-radius:0 6px 6px 0;margin-top:8px;font-size:.87rem}
+.imgs a img{width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--borde)}
+.evo{background:#f1f8e9;border-left:3px solid var(--verde);padding:9px 12px;border-radius:0 8px 8px 0;margin-top:8px;font-size:.87rem}
 .evo small{color:#78909c;display:block}
-.vacio{text-align:center;color:#90a4ae;padding:30px;font-size:.9rem}
-.msg{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:11px 22px;border-radius:8px;font-size:.88rem;z-index:200;display:none;max-width:90%}
+.vacio{text-align:center;color:#90a4ae;padding:26px 10px;font-size:.88rem}
+.subtit{font-size:.9rem;font-weight:700;color:#455a64;margin:16px 0 6px}
+.nota{font-size:.8rem;color:#78909c;margin-bottom:8px}
+
+/* ───── botón flotante "+" ───── */
+#fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;border:none;background:var(--verde);color:#fff;font-size:1.9rem;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:70}
+#fab:active{transform:scale(.93)}
+
+/* ───── varios ───── */
+.msg{position:fixed;bottom:calc(86px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;z-index:200;display:none;max-width:92%;text-align:center}
 #login{position:fixed;inset:0;background:linear-gradient(135deg,#0d47a1,#1976d2);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
-#login .caja{background:#fff;border-radius:12px;padding:30px;max-width:340px;width:100%;text-align:center}
+#login .caja{background:#fff;border-radius:14px;padding:28px 24px;max-width:340px;width:100%;text-align:center}
 #login h1{color:var(--azul-osc);font-size:1.15rem;margin-bottom:4px}
 #login p{font-size:.85rem;color:#607d8b;margin-bottom:14px}
 #cargando{display:none;text-align:center;padding:8px;color:var(--azul);font-size:.85rem}
-.resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
-.resumen .num{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:14px;text-align:center}
-.resumen .num b{font-size:1.7rem;color:var(--azul)}
-.resumen .num span{display:block;font-size:.78rem;color:#78909c}
-canvas{max-height:330px}
-.subtit{font-size:.92rem;font-weight:600;color:#455a64;margin:16px 0 8px}
+.resumen{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(min-width:620px){.resumen{grid-template-columns:repeat(4,1fr)}}
+.resumen .num{background:var(--gris);border-radius:10px;padding:13px;text-align:center}
+.resumen .num b{font-size:1.6rem;color:var(--azul)}
+.resumen .num span{display:block;font-size:.75rem;color:#78909c}
+canvas{max-height:300px}
 </style>
 </head>
 <body>
@@ -71,7 +106,7 @@ canvas{max-height:330px}
     <h1>🏥 Agenda Quirúrgica</h1>
     <p>Dr. Doriam Perera<br>Ingrese su clave de acceso</p>
     <input type="password" id="pinInput" placeholder="PIN" inputmode="numeric" onkeydown="if(event.key==='Enter')entrar()">
-    <button class="btn" style="width:100%" onclick="entrar()">Entrar</button>
+    <button class="btn bloque" onclick="entrar()">Entrar</button>
     <p id="loginErr" style="color:var(--rojo);margin-top:10px;display:none">PIN incorrecto</p>
   </div>
 </div>
@@ -81,30 +116,33 @@ canvas{max-height:330px}
     <h1>🏥 Agenda Quirúrgica</h1>
     <div class="sub">Dr. Doriam Perera</div>
   </div>
-  <button class="btn mini" style="margin-left:auto;background:rgba(255,255,255,.2)" onclick="cargarTodo()">⟳ Actualizar</button>
+  <button id="btnRefrescar" onclick="cargarTodo()">⟳ Actualizar</button>
 </header>
 
-<nav>
-  <button class="act" onclick="tab('nuevo',this)">➕ Nuevo paciente</button>
-  <button onclick="tab('programados',this)">📋 Programados</button>
-  <button onclick="tab('operados',this)">🩺 Operados / Seguimiento</button>
-  <button onclick="tab('consolidado',this)">📊 Consolidado</button>
-</nav>
+<!-- ════ MENÚ SUPERIOR ════ -->
+<div id="menu">
+  <button class="nuevo-btn" onclick="irSec('nuevo')">＋ Nuevo paciente</button>
+  <button onclick="irSec('programados')">📋 Programados <span class="cnt" id="cntProg">0</span></button>
+  <button onclick="irSec('operados')">🩺 Operados <span class="cnt" id="cntOper">0</span></button>
+  <button onclick="irSec('consolidado')">📊 Consolidado</button>
+</div>
 
 <main>
 <div id="cargando">⏳ Cargando datos…</div>
 
-<!-- ════ NUEVO PACIENTE ════ -->
-<section id="sec-nuevo">
-  <div class="card">
-    <h2>Registrar nuevo paciente</h2>
+<!-- ════ NUEVO PACIENTE (oculto por defecto) ════ -->
+<div class="sec" id="sec-nuevo">
+  <button class="sec-head" onclick="toggleSec('nuevo')">
+    <span class="ico">➕</span><span class="tit">Nuevo paciente</span><span class="chev">▼</span>
+  </button>
+  <div class="sec-body">
     <form id="formNuevo" onsubmit="guardarPaciente(event)">
       <div class="fila">
         <div><label>Nombre *</label><input id="f-nombre" required></div>
         <div><label>Apellidos *</label><input id="f-apellidos" required></div>
         <div><label>Edad *</label><input id="f-edad" type="number" min="0" max="120" required></div>
         <div><label>Sexo</label><select id="f-sexo"><option></option><option>Masculino</option><option>Femenino</option></select></div>
-        <div><label>Teléfono</label><input id="f-telefono"></div>
+        <div><label>Teléfono</label><input id="f-telefono" type="tel"></div>
         <div><label>No. expediente</label><input id="f-expediente"></div>
       </div>
       <label>Diagnóstico *</label><input id="f-diagnostico" required>
@@ -115,48 +153,56 @@ canvas{max-height:330px}
       <label>Notas clínicas</label><textarea id="f-notas"></textarea>
       <label>Imágenes preoperatorias</label>
       <input type="file" id="f-imgs" accept="image/*" multiple>
-      <button class="btn verde" id="btnGuardar" type="submit">💾 Guardar paciente</button>
+      <button class="btn verde bloque" id="btnGuardar" type="submit">💾 Guardar paciente</button>
     </form>
   </div>
-</section>
+</div>
 
 <!-- ════ PROGRAMADOS ════ -->
-<section id="sec-programados" style="display:none">
-  <div class="card"><h2>Pacientes programados <span id="numProg" class="tag"></span></h2>
-  <div id="listaProg"></div></div>
-</section>
+<div class="sec abierta" id="sec-programados">
+  <button class="sec-head" onclick="toggleSec('programados')">
+    <span class="ico">📋</span><span class="tit">Pacientes programados</span><span class="cnt" id="numProg">0</span><span class="chev">▼</span>
+  </button>
+  <div class="sec-body"><div id="listaProg"></div></div>
+</div>
 
 <!-- ════ OPERADOS / SEGUIMIENTO ════ -->
-<section id="sec-operados" style="display:none">
-  <div class="card">
-    <h2>Marcar estado de cirugía</h2>
-    <p style="font-size:.83rem;color:#78909c;margin-bottom:10px">Pacientes programados pendientes de resolución:</p>
+<div class="sec" id="sec-operados">
+  <button class="sec-head" onclick="toggleSec('operados')">
+    <span class="ico">🩺</span><span class="tit">Operados / Seguimiento</span><span class="cnt" id="numOper">0</span><span class="chev">▼</span>
+  </button>
+  <div class="sec-body">
+    <div class="subtit" style="margin-top:0">Marcar estado de cirugía</div>
+    <p class="nota">Pacientes programados pendientes de resolución:</p>
     <div id="listaMarcar"></div>
-  </div>
-  <div class="card">
-    <h2>Pacientes operados — seguimiento postquirúrgico</h2>
+    <div class="subtit">Pacientes operados — seguimiento postquirúrgico</div>
     <div id="listaOperados"></div>
-  </div>
-  <div class="card">
-    <h2>Cirugías canceladas</h2>
+    <div class="subtit">Cirugías canceladas</div>
     <div id="listaCancelados"></div>
   </div>
-</section>
+</div>
 
 <!-- ════ CONSOLIDADO ════ -->
-<section id="sec-consolidado" style="display:none">
-  <div class="resumen" id="numeros"></div>
-  <div class="card"><h2>Cirugías realizadas por tipo</h2><div id="consTexto" style="font-size:.9rem;line-height:1.9"></div><canvas id="chartTipos"></canvas></div>
-  <div class="card"><h2>Distribución por estado</h2><canvas id="chartEstados"></canvas></div>
-</section>
+<div class="sec" id="sec-consolidado">
+  <button class="sec-head" onclick="toggleSec('consolidado')">
+    <span class="ico">📊</span><span class="tit">Consolidado de cirugías</span><span class="chev">▼</span>
+  </button>
+  <div class="sec-body">
+    <div class="resumen" id="numeros"></div>
+    <div class="subtit" style="margin-top:0">Cirugías realizadas por tipo</div>
+    <div id="consTexto" style="font-size:.9rem;line-height:1.9"></div>
+    <canvas id="chartTipos"></canvas>
+    <div class="subtit">Distribución por estado</div>
+    <canvas id="chartEstados"></canvas>
+  </div>
+</div>
 </main>
 
+<button id="fab" title="Nuevo paciente" onclick="irSec('nuevo')">＋</button>
 <div class="msg" id="msg"></div>
 
 <script>
-/* ═══════════ CONFIGURACIÓN ═══════════
-   Pegue aquí la URL de su Web App de Google Apps Script
-   (termina en /exec). Vea el archivo INSTRUCCIONES.md      */
+/* ═══════════ CONFIGURACIÓN ═══════════ */
 const API_URL = 'https://script.google.com/macros/s/AKfycbzdUu5ZQZ24NPEQQvb_PFoec6AnT_YbecAywyxjQLxA05O5m_6CffDBMMdDDHD4zd7e/exec';
 
 let PIN = sessionStorage.getItem('agendaPin') || '';
@@ -191,13 +237,20 @@ async function entrar(){
 }
 if(PIN){ $('login').style.display='none'; cargarTodo(); }
 
-/* ───── navegación ───── */
-function tab(n, btn){
-  document.querySelectorAll('main section').forEach(s=>s.style.display='none');
-  $('sec-'+n).style.display='block';
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('act'));
-  btn.classList.add('act');
-  if(n==='consolidado') renderConsolidado();
+/* ───── secciones desplegables ───── */
+function toggleSec(n){
+  const s = $('sec-'+n);
+  s.classList.toggle('abierta');
+  if(n==='consolidado' && s.classList.contains('abierta')) renderConsolidado();
+}
+function irSec(n){
+  const s = $('sec-'+n);
+  if(!s.classList.contains('abierta')){
+    s.classList.add('abierta');
+    if(n==='consolidado') renderConsolidado();
+  }
+  setTimeout(()=>s.scrollIntoView({behavior:'smooth', block:'start'}), 60);
+  if(n==='nuevo') setTimeout(()=>$('f-nombre').focus({preventScroll:true}), 400);
 }
 
 /* ───── carga de datos ───── */
@@ -215,7 +268,7 @@ function renderTodo(){
   renderAutorelleno();
   renderProgramados();
   renderSeguimiento();
-  if($('sec-consolidado').style.display!=='none') renderConsolidado();
+  if($('sec-consolidado').classList.contains('abierta')) renderConsolidado();
 }
 
 /* ───── autorelleno de cirugías ───── */
@@ -242,6 +295,8 @@ async function guardarPaciente(ev){
     $('formNuevo').reset();
     aviso('✅ Paciente guardado correctamente');
     await cargarTodo();
+    $('sec-nuevo').classList.remove('abierta');
+    irSec('programados');
   }catch(e){ aviso('Error: '+e.message); }
   b.disabled=false; b.textContent='💾 Guardar paciente';
 }
@@ -252,9 +307,9 @@ function redimensionar(file){
     const img=new Image(), fr=new FileReader();
     fr.onload=()=>{ img.src=fr.result; };
     img.onload=()=>{
-      const MAX=1200, esc=Math.min(1, MAX/Math.max(img.width,img.height));
+      const MAX=1200, f=Math.min(1, MAX/Math.max(img.width,img.height));
       const c=document.createElement('canvas');
-      c.width=Math.round(img.width*esc); c.height=Math.round(img.height*esc);
+      c.width=Math.round(img.width*f); c.height=Math.round(img.height*f);
       c.getContext('2d').drawImage(img,0,0,c.width,c.height);
       res(c.toDataURL('image/jpeg',0.82).split(',')[1]);
     };
@@ -300,7 +355,7 @@ function detalleHTML(p){
 }
 
 function cardPaciente(p, extra=''){
-  return `<div class="pac" id="pac-${esc(p.ID)}">
+  return `<div class="pac">
     <div class="pac-head" onclick="this.parentElement.classList.toggle('abierto')">
       <span class="pac-nombre">${esc(p.Nombre)} ${esc(p.Apellidos)}</span>
       <span class="tag">${esc(p.Edad)} años</span>
@@ -316,6 +371,7 @@ function cardPaciente(p, extra=''){
 function renderProgramados(){
   const lista = programados();
   $('numProg').textContent = lista.length;
+  $('cntProg').textContent = lista.length;
   $('listaProg').innerHTML = lista.length ? lista.map(p=>cardPaciente(p)).join('') : '<div class="vacio">No hay pacientes programados</div>';
 }
 
@@ -330,6 +386,8 @@ function renderSeguimiento(){
   `)).join('') : '<div class="vacio">No hay pacientes pendientes</div>';
 
   const ops = state.pacientes.filter(p=>p.Estado==='Operado').sort((a,b)=>new Date(b.FechaEstado)-new Date(a.FechaEstado));
+  $('numOper').textContent = ops.length;
+  $('cntOper').textContent = ops.length;
   $('listaOperados').innerHTML = ops.length ? ops.map(p=>{
     const evos = evosDe(p.ID).map(e=>`<div class="evo"><small>${fmtFecha(e.Fecha)}</small>${esc(e.Nota)}</div>`).join('') || '<div class="vacio" style="padding:10px">Sin evoluciones registradas</div>';
     const imgsPost = imgsDe(p.ID,'post').map(i=>`<a href="https://drive.google.com/file/d/${esc(i.FileID)}/view" target="_blank"><img src="${imgUrl(esc(i.FileID))}" alt="img"></a>`).join('') || '<span style="font-size:.8rem;color:#90a4ae">Sin imágenes</span>';
