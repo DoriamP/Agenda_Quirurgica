@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Quirúrgica — Dr. Doriam Perera</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --azul:#1565c0; --azul-osc:#0d47a1; --verde:#2e7d32; --rojo:#c62828;
+  --ambar:#ef6c00; --gris:#f4f6f8; --borde:#dde3ea; --texto:#263238;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:var(--gris);color:var(--texto)}
+header{background:linear-gradient(135deg,var(--azul-osc),var(--azul));color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:1.25rem;font-weight:600}
+header .sub{font-size:.85rem;opacity:.9}
+nav{display:flex;background:#fff;border-bottom:1px solid var(--borde);overflow-x:auto;position:sticky;top:0;z-index:50}
+nav button{flex:1;min-width:130px;padding:13px 8px;border:none;background:none;cursor:pointer;font-size:.9rem;color:#607d8b;border-bottom:3px solid transparent;white-space:nowrap}
+nav button.act{color:var(--azul);border-bottom-color:var(--azul);font-weight:600;background:#f0f6ff}
+main{max-width:980px;margin:0 auto;padding:18px 14px 60px}
+.card{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+h2{font-size:1.05rem;margin-bottom:12px;color:var(--azul-osc)}
+label{display:block;font-size:.8rem;font-weight:600;margin:10px 0 4px;color:#455a64}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--borde);border-radius:6px;font-size:.92rem;background:#fff}
+textarea{min-height:70px;resize:vertical}
+.fila{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:560px){.fila{grid-template-columns:1fr}}
+.btn{display:inline-block;border:none;border-radius:6px;padding:10px 18px;font-size:.9rem;cursor:pointer;color:#fff;background:var(--azul);margin-top:12px}
+.btn:hover{filter:brightness(1.08)}
+.btn.verde{background:var(--verde)} .btn.rojo{background:var(--rojo)} .btn.ambar{background:var(--ambar)}
+.btn.mini{padding:6px 12px;font-size:.8rem;margin:4px 4px 0 0}
+.btn:disabled{opacity:.5;cursor:wait}
+.pac{border:1px solid var(--borde);border-radius:8px;margin-bottom:10px;background:#fff;overflow:hidden}
+.pac-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;flex-wrap:wrap}
+.pac-head:hover{background:#f7fafd}
+.pac-nombre{font-weight:600;font-size:.97rem}
+.tag{font-size:.74rem;padding:3px 9px;border-radius:12px;background:#e3f2fd;color:var(--azul-osc);white-space:nowrap}
+.tag.dias{background:#fff3e0;color:var(--ambar);font-weight:600}
+.tag.op{background:#e8f5e9;color:var(--verde)} .tag.canc{background:#ffebee;color:var(--rojo)}
+.flecha{margin-left:auto;color:#90a4ae;transition:.2s}
+.pac.abierto .flecha{transform:rotate(180deg)}
+.pac-det{display:none;padding:0 14px 14px;border-top:1px dashed var(--borde)}
+.pac.abierto .pac-det{display:block}
+.det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:10px}
+.det-grid div{font-size:.85rem;background:var(--gris);padding:7px 10px;border-radius:6px}
+.det-grid b{color:#546e7a;font-size:.75rem;display:block}
+.imgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.imgs a img{width:110px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--borde)}
+.evo{background:#f1f8e9;border-left:3px solid var(--verde);padding:8px 12px;border-radius:0 6px 6px 0;margin-top:8px;font-size:.87rem}
+.evo small{color:#78909c;display:block}
+.vacio{text-align:center;color:#90a4ae;padding:30px;font-size:.9rem}
+.msg{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:11px 22px;border-radius:8px;font-size:.88rem;z-index:200;display:none;max-width:90%}
+#login{position:fixed;inset:0;background:linear-gradient(135deg,#0d47a1,#1976d2);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+#login .caja{background:#fff;border-radius:12px;padding:30px;max-width:340px;width:100%;text-align:center}
+#login h1{color:var(--azul-osc);font-size:1.15rem;margin-bottom:4px}
+#login p{font-size:.85rem;color:#607d8b;margin-bottom:14px}
+#cargando{display:none;text-align:center;padding:8px;color:var(--azul);font-size:.85rem}
+.resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.resumen .num{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:14px;text-align:center}
+.resumen .num b{font-size:1.7rem;color:var(--azul)}
+.resumen .num span{display:block;font-size:.78rem;color:#78909c}
+canvas{max-height:330px}
+.subtit{font-size:.92rem;font-weight:600;color:#455a64;margin:16px 0 8px}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="caja">
+    <h1>🏥 Agenda Quirúrgica</h1>
+    <p>Dr. Doriam Perera<br>Ingrese su clave de acceso</p>
+    <input type="password" id="pinInput" placeholder="PIN" inputmode="numeric" onkeydown="if(event.key==='Enter')entrar()">
+    <button class="btn" style="width:100%" onclick="entrar()">Entrar</button>
+    <p id="loginErr" style="color:var(--rojo);margin-top:10px;display:none">PIN incorrecto</p>
+  </div>
+</div>
+
+<header>
+  <div>
+    <h1>🏥 Agenda Quirúrgica</h1>
+    <div class="sub">Dr. Doriam Perera</div>
+  </div>
+  <button class="btn mini" style="margin-left:auto;background:rgba(255,255,255,.2)" onclick="cargarTodo()">⟳ Actualizar</button>
+</header>
+
+<nav>
+  <button class="act" onclick="tab('nuevo',this)">➕ Nuevo paciente</button>
+  <button onclick="tab('programados',this)">📋 Programados</button>
+  <button onclick="tab('operados',this)">🩺 Operados / Seguimiento</button>
+  <button onclick="tab('consolidado',this)">📊 Consolidado</button>
+</nav>
+
+<main>
+<div id="cargando">⏳ Cargando datos…</div>
+
+<!-- ════ NUEVO PACIENTE ════ -->
+<section id="sec-nuevo">
+  <div class="card">
+    <h2>Registrar nuevo paciente</h2>
+    <form id="formNuevo" onsubmit="guardarPaciente(event)">
+      <div class="fila">
+        <div><label>Nombre *</label><input id="f-nombre" required></div>
+        <div><label>Apellidos *</label><input id="f-apellidos" required></div>
+        <div><label>Edad *</label><input id="f-edad" type="number" min="0" max="120" required></div>
+        <div><label>Sexo</label><select id="f-sexo"><option></option><option>Masculino</option><option>Femenino</option></select></div>
+        <div><label>Teléfono</label><input id="f-telefono"></div>
+        <div><label>No. expediente</label><input id="f-expediente"></div>
+      </div>
+      <label>Diagnóstico *</label><input id="f-diagnostico" required>
+      <label>Cirugía pendiente *</label>
+      <input id="f-cirugia" list="listaCirugias" required placeholder="Escriba o elija una cirugía previa">
+      <datalist id="listaCirugias"></datalist>
+      <label>Antecedentes</label><textarea id="f-antecedentes"></textarea>
+      <label>Notas clínicas</label><textarea id="f-notas"></textarea>
+      <label>Imágenes preoperatorias</label>
+      <input type="file" id="f-imgs" accept="image/*" multiple>
+      <button class="btn verde" id="btnGuardar" type="submit">💾 Guardar paciente</button>
+    </form>
+  </div>
+</section>
+
+<!-- ════ PROGRAMADOS ════ -->
+<section id="sec-programados" style="display:none">
+  <div class="card"><h2>Pacientes programados <span id="numProg" class="tag"></span></h2>
+  <div id="listaProg"></div></div>
+</section>
+
+<!-- ════ OPERADOS / SEGUIMIENTO ════ -->
+<section id="sec-operados" style="display:none">
+  <div class="card">
+    <h2>Marcar estado de cirugía</h2>
+    <p style="font-size:.83rem;color:#78909c;margin-bottom:10px">Pacientes programados pendientes de resolución:</p>
+    <div id="listaMarcar"></div>
+  </div>
+  <div class="card">
+    <h2>Pacientes operados — seguimiento postquirúrgico</h2>
+    <div id="listaOperados"></div>
+  </div>
+  <div class="card">
+    <h2>Cirugías canceladas</h2>
+    <div id="listaCancelados"></div>
+  </div>
+</section>
+
+<!-- ════ CONSOLIDADO ════ -->
+<section id="sec-consolidado" style="display:none">
+  <div class="resumen" id="numeros"></div>
+  <div class="card"><h2>Cirugías realizadas por tipo</h2><div id="consTexto" style="font-size:.9rem;line-height:1.9"></div><canvas id="chartTipos"></canvas></div>
+  <div class="card"><h2>Distribución por estado</h2><canvas id="chartEstados"></canvas></div>
+</section>
+</main>
+
+<div class="msg" id="msg"></div>
+
+<script>
+/* ═══════════ CONFIGURACIÓN ═══════════
+   Pegue aquí la URL de su Web App de Google Apps Script
+   (termina en /exec). Vea el archivo INSTRUCCIONES.md      */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzdUu5ZQZ24NPEQQvb_PFoec6AnT_YbecAywyxjQLxA05O5m_6CffDBMMdDDHD4zd7e/exec';
+
+let PIN = sessionStorage.getItem('agendaPin') || '';
+let state = { pacientes: [], evoluciones: [], imagenes: [] };
+
+/* ───── utilidades ───── */
+const $ = id => document.getElementById(id);
+function aviso(t){ const m=$('msg'); m.textContent=t; m.style.display='block'; clearTimeout(m._t); m._t=setTimeout(()=>m.style.display='none',3500); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function dias(fecha){ const d=Math.floor((Date.now()-new Date(fecha).getTime())/86400000); return isNaN(d)?'?':d; }
+function fmtFecha(f){ if(!f) return ''; const d=new Date(f); return isNaN(d)?String(f):d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}); }
+function imgUrl(id){ return 'https://drive.google.com/thumbnail?id='+id+'&sz=w1200'; }
+
+async function api(payload){
+  if(API_URL.startsWith('PEGUE')){ aviso('⚠️ Configure la URL de Apps Script en index.html'); throw new Error('Sin configurar'); }
+  const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ ...payload, pin: PIN }) });
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || 'Error del servidor');
+  return j;
+}
+
+/* ───── acceso ───── */
+async function entrar(){
+  PIN = $('pinInput').value.trim();
+  if(!PIN) return;
+  try{
+    await api({action:'ping'});
+    sessionStorage.setItem('agendaPin', PIN);
+    $('login').style.display='none';
+    cargarTodo();
+  }catch(e){ $('loginErr').style.display='block'; }
+}
+if(PIN){ $('login').style.display='none'; cargarTodo(); }
+
+/* ───── navegación ───── */
+function tab(n, btn){
+  document.querySelectorAll('main section').forEach(s=>s.style.display='none');
+  $('sec-'+n).style.display='block';
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  if(n==='consolidado') renderConsolidado();
+}
+
+/* ───── carga de datos ───── */
+async function cargarTodo(){
+  $('cargando').style.display='block';
+  try{
+    const j = await api({action:'getAll'});
+    state = j.data;
+    renderTodo();
+  }catch(e){ aviso('Error al cargar: '+e.message); }
+  $('cargando').style.display='none';
+}
+
+function renderTodo(){
+  renderAutorelleno();
+  renderProgramados();
+  renderSeguimiento();
+  if($('sec-consolidado').style.display!=='none') renderConsolidado();
+}
+
+/* ───── autorelleno de cirugías ───── */
+function renderAutorelleno(){
+  const tipos = [...new Set(state.pacientes.map(p=>String(p.Cirugia||'').trim()).filter(Boolean))].sort();
+  $('listaCirugias').innerHTML = tipos.map(t=>`<option value="${esc(t)}">`).join('');
+}
+
+/* ───── guardar paciente ───── */
+async function guardarPaciente(ev){
+  ev.preventDefault();
+  const b=$('btnGuardar'); b.disabled=true; b.textContent='Guardando…';
+  try{
+    const data = {
+      Nombre:$('f-nombre').value.trim(), Apellidos:$('f-apellidos').value.trim(),
+      Edad:$('f-edad').value, Sexo:$('f-sexo').value, Telefono:$('f-telefono').value.trim(),
+      Expediente:$('f-expediente').value.trim(), Diagnostico:$('f-diagnostico').value.trim(),
+      Cirugia:$('f-cirugia').value.trim(), Antecedentes:$('f-antecedentes').value.trim(),
+      Notas:$('f-notas').value.trim()
+    };
+    const j = await api({action:'addPatient', data});
+    const files = $('f-imgs').files;
+    for(const f of files){ await subirImagen(j.id, 'pre', f); }
+    $('formNuevo').reset();
+    aviso('✅ Paciente guardado correctamente');
+    await cargarTodo();
+  }catch(e){ aviso('Error: '+e.message); }
+  b.disabled=false; b.textContent='💾 Guardar paciente';
+}
+
+/* ───── imágenes (redimensiona y sube) ───── */
+function redimensionar(file){
+  return new Promise(res=>{
+    const img=new Image(), fr=new FileReader();
+    fr.onload=()=>{ img.src=fr.result; };
+    img.onload=()=>{
+      const MAX=1200, esc=Math.min(1, MAX/Math.max(img.width,img.height));
+      const c=document.createElement('canvas');
+      c.width=Math.round(img.width*esc); c.height=Math.round(img.height*esc);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL('image/jpeg',0.82).split(',')[1]);
+    };
+    fr.readAsDataURL(file);
+  });
+}
+async function subirImagen(pacId, tipo, file){
+  const base64 = await redimensionar(file);
+  await api({action:'addImage', id:pacId, tipo, base64, nombre:file.name});
+}
+async function agregarImg(pacId, tipo, input){
+  if(!input.files.length) return;
+  aviso('Subiendo imagen…');
+  try{
+    for(const f of input.files) await subirImagen(pacId, tipo, f);
+    aviso('✅ Imagen guardada');
+    await cargarTodo();
+  }catch(e){ aviso('Error: '+e.message); }
+}
+
+/* ───── helpers de datos ───── */
+function imgsDe(id, tipo){ return state.imagenes.filter(i=>i.PacienteID===id && (!tipo || i.Tipo===tipo)); }
+function evosDe(id){ return state.evoluciones.filter(e=>e.PacienteID===id); }
+function programados(){ return state.pacientes.filter(p=>p.Estado==='Programado').sort((a,b)=>new Date(a.FechaRegistro)-new Date(b.FechaRegistro)); }
+
+function detalleHTML(p){
+  const imgs = tipo => imgsDe(p.ID,tipo).map(i=>`<a href="https://drive.google.com/file/d/${esc(i.FileID)}/view" target="_blank"><img src="${imgUrl(esc(i.FileID))}" alt="img"></a>`).join('') || '<span style="font-size:.8rem;color:#90a4ae">Sin imágenes</span>';
+  return `
+  <div class="det-grid">
+    <div><b>Sexo</b>${esc(p.Sexo)||'—'}</div>
+    <div><b>Teléfono</b>${esc(p.Telefono)||'—'}</div>
+    <div><b>Expediente</b>${esc(p.Expediente)||'—'}</div>
+    <div><b>Fecha de registro</b>${fmtFecha(p.FechaRegistro)}</div>
+    <div><b>Diagnóstico</b>${esc(p.Diagnostico)||'—'}</div>
+    <div><b>Antecedentes</b>${esc(p.Antecedentes)||'—'}</div>
+    <div><b>Notas clínicas</b>${esc(p.Notas)||'—'}</div>
+    <div><b>Reprogramaciones</b>${p.Reprogramaciones||0}</div>
+  </div>
+  <div class="subtit">📷 Imágenes preoperatorias</div>
+  <div class="imgs">${imgs('pre')}</div>
+  <label style="margin-top:8px">Agregar imagen preoperatoria</label>
+  <input type="file" accept="image/*" multiple onchange="agregarImg('${esc(p.ID)}','pre',this)">`;
+}
+
+function cardPaciente(p, extra=''){
+  return `<div class="pac" id="pac-${esc(p.ID)}">
+    <div class="pac-head" onclick="this.parentElement.classList.toggle('abierto')">
+      <span class="pac-nombre">${esc(p.Nombre)} ${esc(p.Apellidos)}</span>
+      <span class="tag">${esc(p.Edad)} años</span>
+      <span class="tag">${esc(p.Cirugia)}</span>
+      <span class="tag dias">⏱ ${dias(p.FechaRegistro)} días en lista</span>
+      <span class="flecha">▼</span>
+    </div>
+    <div class="pac-det">${detalleHTML(p)}${extra}</div>
+  </div>`;
+}
+
+/* ───── sección programados ───── */
+function renderProgramados(){
+  const lista = programados();
+  $('numProg').textContent = lista.length;
+  $('listaProg').innerHTML = lista.length ? lista.map(p=>cardPaciente(p)).join('') : '<div class="vacio">No hay pacientes programados</div>';
+}
+
+/* ───── sección operados / seguimiento ───── */
+function renderSeguimiento(){
+  const prog = programados();
+  $('listaMarcar').innerHTML = prog.length ? prog.map(p=>cardPaciente(p, `
+    <div class="subtit">Resolución de la cirugía</div>
+    <button class="btn verde mini" onclick="marcar('${esc(p.ID)}','Operado')">✅ Se operó</button>
+    <button class="btn rojo mini" onclick="marcar('${esc(p.ID)}','Cancelado')">❌ Se canceló</button>
+    <button class="btn ambar mini" onclick="marcar('${esc(p.ID)}','Reprogramado')">🔄 Se reprogramó</button>
+  `)).join('') : '<div class="vacio">No hay pacientes pendientes</div>';
+
+  const ops = state.pacientes.filter(p=>p.Estado==='Operado').sort((a,b)=>new Date(b.FechaEstado)-new Date(a.FechaEstado));
+  $('listaOperados').innerHTML = ops.length ? ops.map(p=>{
+    const evos = evosDe(p.ID).map(e=>`<div class="evo"><small>${fmtFecha(e.Fecha)}</small>${esc(e.Nota)}</div>`).join('') || '<div class="vacio" style="padding:10px">Sin evoluciones registradas</div>';
+    const imgsPost = imgsDe(p.ID,'post').map(i=>`<a href="https://drive.google.com/file/d/${esc(i.FileID)}/view" target="_blank"><img src="${imgUrl(esc(i.FileID))}" alt="img"></a>`).join('') || '<span style="font-size:.8rem;color:#90a4ae">Sin imágenes</span>';
+    return `<div class="pac">
+      <div class="pac-head" onclick="this.parentElement.classList.toggle('abierto')">
+        <span class="pac-nombre">${esc(p.Nombre)} ${esc(p.Apellidos)}</span>
+        <span class="tag">${esc(p.Cirugia)}</span>
+        <span class="tag op">Operado · ${fmtFecha(p.FechaEstado)}</span>
+        <span class="flecha">▼</span>
+      </div>
+      <div class="pac-det">
+        ${detalleHTML(p)}
+        <div class="subtit">🩺 Evolución postquirúrgica</div>
+        ${evos}
+        <textarea id="evo-${esc(p.ID)}" placeholder="Escribir nueva nota de evolución…" style="margin-top:8px"></textarea>
+        <button class="btn verde mini" onclick="agregarEvo('${esc(p.ID)}')">➕ Agregar evolución</button>
+        <div class="subtit">📷 Imágenes postoperatorias</div>
+        <div class="imgs">${imgsPost}</div>
+        <label style="margin-top:8px">Agregar imagen postoperatoria</label>
+        <input type="file" accept="image/*" multiple onchange="agregarImg('${esc(p.ID)}','post',this)">
+      </div>
+    </div>`;
+  }).join('') : '<div class="vacio">Aún no hay pacientes operados</div>';
+
+  const canc = state.pacientes.filter(p=>p.Estado==='Cancelado');
+  $('listaCancelados').innerHTML = canc.length ? canc.map(p=>`<div class="pac"><div class="pac-head"><span class="pac-nombre">${esc(p.Nombre)} ${esc(p.Apellidos)}</span><span class="tag">${esc(p.Cirugia)}</span><span class="tag canc">Cancelado · ${fmtFecha(p.FechaEstado)}</span></div></div>`).join('') : '<div class="vacio">Sin cancelaciones</div>';
+}
+
+async function marcar(id, estado){
+  const txt = {Operado:'¿Confirmar que el paciente YA SE OPERÓ?', Cancelado:'¿Confirmar CANCELACIÓN de la cirugía?', Reprogramado:'¿Reprogramar? El contador de días se reiniciará desde hoy.'}[estado];
+  if(!confirm(txt)) return;
+  try{
+    await api({action:'updateStatus', id, estado});
+    aviso('✅ Estado actualizado: '+estado);
+    await cargarTodo();
+  }catch(e){ aviso('Error: '+e.message); }
+}
+
+async function agregarEvo(id){
+  const t = $('evo-'+id).value.trim();
+  if(!t) return aviso('Escriba la nota de evolución');
+  try{
+    await api({action:'addEvolution', id, nota:t});
+    aviso('✅ Evolución guardada');
+    await cargarTodo();
+  }catch(e){ aviso('Error: '+e.message); }
+}
+
+/* ───── consolidado ───── */
+let chT=null, chE=null;
+function renderConsolidado(){
+  const ops = state.pacientes.filter(p=>p.Estado==='Operado');
+  const prog = programados();
+  const canc = state.pacientes.filter(p=>p.Estado==='Cancelado');
+
+  $('numeros').innerHTML = `
+    <div class="num"><b>${state.pacientes.length}</b><span>Total pacientes</span></div>
+    <div class="num"><b>${prog.length}</b><span>Programados</span></div>
+    <div class="num"><b>${ops.length}</b><span>Operados</span></div>
+    <div class="num"><b>${canc.length}</b><span>Cancelados</span></div>`;
+
+  const cuentas = {};
+  ops.forEach(p=>{ const c=String(p.Cirugia||'(sin tipo)').trim(); cuentas[c]=(cuentas[c]||0)+1; });
+  const tipos = Object.entries(cuentas).sort((a,b)=>b[1]-a[1]);
+
+  $('consTexto').innerHTML = tipos.length
+    ? tipos.map(([t,n])=>`• <b>${esc(t)}</b>: ${n} cirugía${n>1?'s':''} (${(n/ops.length*100).toFixed(1)}%)`).join('<br>') + `<br><br>Total de cirugías realizadas: <b>${ops.length}</b>`
+    : '<span style="color:#90a4ae">Aún no hay cirugías realizadas para consolidar.</span>';
+
+  const colores = ['#1565c0','#2e7d32','#ef6c00','#6a1b9a','#c62828','#00838f','#f9a825','#4527a0','#2e7d32','#ad1457'];
+  if(chT) chT.destroy();
+  chT = new Chart($('chartTipos'), { type:'bar',
+    data:{ labels:tipos.map(t=>t[0]), datasets:[{label:'Cirugías realizadas', data:tipos.map(t=>t[1]), backgroundColor:colores}] },
+    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1}}} } });
+
+  if(chE) chE.destroy();
+  chE = new Chart($('chartEstados'), { type:'doughnut',
+    data:{ labels:['Programados','Operados','Cancelados'], datasets:[{data:[prog.length,ops.length,canc.length], backgroundColor:['#1565c0','#2e7d32','#c62828']}] },
+    options:{ plugins:{legend:{position:'bottom'}} } });
+}
+</script>
+</body>
+</html>
